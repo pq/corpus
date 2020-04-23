@@ -79,7 +79,7 @@ class GithubSourceReifier extends SourceReifier<GithubSource> {
 
     // If no commit info is cached, clone and capture commit metadata.
     if (host.commitHash == null) {
-      log.stdout('Cloning "${project.name}"...');
+      log.trace('Cloning "${project.name}"...');
 
       var clone = await git.clone(
           repoUrl: host.repoUrl, cloneDir: sourceDirPath, logger: log);
@@ -123,7 +123,7 @@ class GithubSourceReifier extends SourceReifier<GithubSource> {
           var overlayRoot = Directory(path.join(overlaysPath, project.name));
           project.overlayPath =
               path.relative(overlayRoot.path, from: overlaysPath);
-          log.stdout('Copying overlays...');
+          log.trace('Copying overlays...');
 
           for (var overlayFile in overlayFiles) {
             await copyFile(overlayFile, overlayRoot,
@@ -227,11 +227,10 @@ class Project {
       @required String overlaysPath,
       @required Logger log}) async {
     if (host == null) {
-      log.stdout('Not reifying $name: no source host');
+      log.trace('Not reifying $name: no source host');
       return;
     }
 
-    //
     var reifier = host.getReifier(this,
         outputDirPath: outputDirPath, overlaysPath: overlaysPath, log: log);
     await reifier.reifySources();

@@ -3,12 +3,16 @@
 // found in the LICENSE file.
 
 import 'package:args/command_runner.dart';
+
 import 'commands/fetch.dart';
 import 'commands/index.dart';
 
 class CorpusToolCommandRunner extends CommandRunner {
   CorpusToolCommandRunner() : super('corpus_tool', 'Flutter corpus tools.') {
+    argParser.addFlag('verbose',
+        abbr: 'v', help: 'Verbose output.', negatable: false);
     addCommand(FetchCommand());
     addCommand(IndexCommand());
+
   }
 }

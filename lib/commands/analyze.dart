@@ -6,7 +6,9 @@ import 'dart:async';
 
 import 'package:args/command_runner.dart';
 
-class AnalyzeCommand extends Command {
+import 'base.dart';
+
+class AnalyzeCommand extends BaseCommand {
   @override
   String get name => 'analyze';
 

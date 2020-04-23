@@ -5,8 +5,9 @@
 import 'dart:async';
 
 import 'package:args/command_runner.dart';
+import 'package:flutter_corpus/commands/base.dart';
 
-class FetchCommand extends Command {
+class FetchCommand extends BaseCommand {
   @override
   String get name => 'fetch';
 

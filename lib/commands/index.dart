@@ -3,10 +3,11 @@
 // found in the LICENSE file.
 
 import 'package:args/command_runner.dart';
+import 'package:flutter_corpus/commands/base.dart';
 
 import 'index/itsallwidgets.dart';
 
-class IndexCommand extends Command {
+class IndexCommand extends BaseCommand {
   IndexCommand() {
     addSubcommand(IndexItsAllWidgetsCommand());
   }

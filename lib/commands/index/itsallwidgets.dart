@@ -8,8 +8,6 @@ import 'dart:io';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/element/element.dart';
-import 'package:args/command_runner.dart';
-import 'package:cli_util/cli_logging.dart';
 import 'package:path/path.dart' as path;
 
 import '../../src/analysis/driver.dart';
@@ -17,13 +15,13 @@ import '../../src/analysis/visitors.dart';
 import '../../src/corpus.dart';
 import '../../src/file.dart';
 import '../../src/metadata.dart';
+import '../base.dart';
 
 final _feedFilePath = path.join('_data', 'itsallwidgets', 'feed.json');
-
 final _indexFilePath = path.join(indexDirPath, 'itsallwidgets', 'index.json');
-
 final _overlaysDirPath = path.join(indexDirPath, 'itsallwidgets', 'overlays');
-class IndexItsAllWidgetsCommand extends Command {
+
+class IndexItsAllWidgetsCommand extends BaseCommand {
   @override
   String get description => 'Build itsallwidgets index.';
 
@@ -32,7 +30,6 @@ class IndexItsAllWidgetsCommand extends Command {
 
   @override
   Future run() async {
-    var log = Logger.standard();
     log.stdout('Building index...');
 
     // Read or create the index.
@@ -41,7 +38,7 @@ class IndexItsAllWidgetsCommand extends Command {
 
     // Update index with data from the itsallwidgets RSS feed.
 
-    log.stdout('Parsing feed...');
+    log.trace('Parsing feed...');
     var feed = File(_feedFilePath).readAsStringSync();
     for (var entry in json.decode(feed)) {
       var name = entry['url'].split('/').last;
@@ -55,7 +52,7 @@ class IndexItsAllWidgetsCommand extends Command {
       // todo (pq): remove projects not in feed
     }
 
-    log.stdout('Fetching projects...');
+    log.trace('Fetching projects...');
 
     //TMP
     var limit = 2;
@@ -68,7 +65,7 @@ class IndexItsAllWidgetsCommand extends Command {
       }
 
       if (project.host == null) {
-        log.stdout('Skipping ${project.name}: no source host');
+        log.trace('Skipping ${project.name}: no source host');
         continue;
       }
 
@@ -83,6 +80,7 @@ class IndexItsAllWidgetsCommand extends Command {
       var analysisPerformed =
           project.metadata[MetadataKeys.libraryCount] != null;
       if (!analysisPerformed || true /* TMP */) {
+        log.stdout("Analyzing '${project.name}'...");
         var cloneDir = Directory(cloneDirPath);
         // todo (pq): do we need to recurse here?
         var driver = Driver([cloneDir.absolute.path], log);
@@ -103,6 +101,7 @@ class IndexItsAllWidgetsCommand extends Command {
 
     log.stdout('Writing index...');
     await index.write();
+    log.stdout('Done.');
   }
 }
 class _AstVisitor extends SimpleAstVisitor<void> {

@@ -76,12 +76,10 @@ class Driver {
   Future _analyzeFiles(
       ResourceProvider resourceProvider, List<String> analysisRoots) async {
     if (excludedPaths.isNotEmpty) {
-      log.stdout('(Excluding paths $excludedPaths from analysis.)');
+      log.trace('(Excluding paths $excludedPaths from analysis.)');
     }
 
     // Analyze.
-    log.stdout('Analyzing...');
-
     for (var root in analysisRoots) {
       var collection = AnalysisContextCollection(
         includedPaths: [root],
