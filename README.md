@@ -1,2 +1,2 @@
-# itsallwidgets_corpus
+# flutter_corpus
 Flutter widget corpus experiments.

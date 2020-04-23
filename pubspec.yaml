@@ -1,0 +1,18 @@
+name: flutter_corpus
+version: 0.0.1
+
+description: >-
+  Flutter code-mining corpus experiments
+
+environment:
+  sdk: '>=2.6.0 <3.0.0'
+
+dependencies:
+  analyzer: ^0.37.0
+  args: any
+  cli_util: any
+  meta: ^1.0.0
+  path: ^1.2.0
+
+dev_dependencies:
+  pedantic: ^1.9.0
