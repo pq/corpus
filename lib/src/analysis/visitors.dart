@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:analyzer/source/line_info.dart';
-
 import '../file.dart';
 
 /// A simple visitor for analysis options files.

@@ -2,9 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:args/command_runner.dart';
-import 'package:flutter_corpus/commands/base.dart';
-
+import 'base.dart';
 import 'index/itsallwidgets.dart';
 
 class IndexCommand extends BaseCommand {

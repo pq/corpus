@@ -6,14 +6,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cli_util/cli_logging.dart';
-import 'package:path/path.dart' as path;
-
 import 'package:meta/meta.dart';
 
 class CloneResult {
   final String directory;
   final int exitCode;
   final String msg;
+
   const CloneResult(this.exitCode, this.directory, {this.msg = ''});
 }
 

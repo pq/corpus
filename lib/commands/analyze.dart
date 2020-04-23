@@ -3,9 +3,6 @@
 // found in the LICENSE file.
 
 import 'dart:async';
-
-import 'package:args/command_runner.dart';
-
 import 'base.dart';
 
 class AnalyzeCommand extends BaseCommand {
