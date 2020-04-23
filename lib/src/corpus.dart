@@ -4,7 +4,15 @@
 
 /// Corpus model classes.
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:cli_util/cli_logging.dart';
+import 'package:meta/meta.dart';
+import 'package:path/path.dart' as path;
+
+import '../src/git.dart' as git;
+import '../src/pub.dart' as pub;
+import 'file.dart';
 import 'metadata.dart';
 
 /// A collection of projects.
@@ -21,6 +29,145 @@ class Corpus {
   List<Map<String, dynamic>> toJson() => [
         for (var project in projects) project.toJson(),
       ];
+}
+
+abstract class SourceReifier<T extends SourceHost> {
+  final String overlaysPath;
+  final String sourceDirPath;
+  final Logger log;
+  Project project;
+  SourceReifier(this.project,
+      {@required this.overlaysPath,
+      @required this.sourceDirPath,
+      @required this.log});
+
+  Future<void> reifySources();
+
+  T get host => project.host;
+}
+
+class IndexFile {
+  final Corpus corpus = Corpus();
+
+  final File file;
+  IndexFile(String path) : file = File(path);
+
+  bool readSync() {
+    if (file.existsSync()) {
+      var index = file.readAsStringSync();
+      for (var entry in json.decode(index)) {
+        var project = Project.fromJson(entry);
+        corpus.projects.add(project);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> write({bool prettyPrint = true}) async {
+    var jsonMap = corpus.toJson();
+    var jsonString = prettyPrint
+        ? JsonEncoder.withIndent('  ').convert(jsonMap)
+        : jsonEncode(jsonMap);
+    if (!file.existsSync()) {
+      await file.create();
+    }
+
+    await file.writeAsString(jsonString);
+  }
+}
+
+
+class GithubSourceReifier extends SourceReifier<GithubSource> {
+  GithubSourceReifier(Project project,
+      {@required String overlaysPath,
+      @required String sourceDirPath,
+      @required Logger log})
+      : super(project,
+            sourceDirPath: sourceDirPath, overlaysPath: overlaysPath, log: log);
+
+  @override
+  Future<void> reifySources() async {
+    var cloneDir = Directory(sourceDirPath);
+
+    // If no commit info is cached, clone and capture commit metadata.
+    if (host.commitHash == null) {
+      log.stdout('Cloning "${project.name}"...');
+
+      var clone = await git.clone(
+          repoUrl: host.repoUrl, cloneDir: sourceDirPath, logger: log);
+      if (clone.exitCode != 0) {
+        log.stderr('Error cloning ${project.name}: ${clone.msg}');
+        // Set repo URl to null to prevent retries.
+        host.repoUrl = null;
+      } else {
+        //
+        // Cache commit metadata.
+        var lastCommit = await git.getLastCommit(cloneDir);
+        var commitDate = await git.getLastCommitDate(cloneDir);
+        project.metadata[MetadataKeys.lastCommitDate] = commitDate;
+        host.commitHash = lastCommit;
+      }
+    }
+
+    // If no overlayPath is cached, get pub deps and cache overlays.
+    if (project.overlayPath == null) {
+      //
+      // Get pub dependencies.
+      var overlayFiles = <File>[];
+      var pubResult = await _runPubGet(cloneDir, overlayFiles,
+          rootDir: cacheDirPath, log: log);
+      // todo (pq): this won't work w/ mono_repos: FIX that.
+      if (pubResult == 0) {
+        for (var dir in cloneDir.listSync(recursive: true)) {
+          var pubResult = await _runPubGet(dir, overlayFiles,
+              rootDir: cacheDirPath, log: log);
+          if (pubResult != null && pubResult != 0) {
+            // Don't set a success flag.
+            continue;
+          }
+        }
+
+        // Tag successful pub get.
+        project.metadata[MetadataKeys.pubGetSuccess] = true;
+
+        // Copy overlays.
+        if (overlayFiles.isNotEmpty) {
+          var overlayRoot = Directory(path.join(overlaysPath, project.name));
+          project.overlayPath =
+              path.relative(overlayRoot.path, from: overlaysPath);
+          log.stdout('Copying overlays...');
+
+          for (var overlayFile in overlayFiles) {
+            await copyFile(overlayFile, overlayRoot,
+                relativePath: path.join(cacheDirPath, project.name));
+          }
+        }
+      }
+    }
+  }
+
+  Future<int> _runPubGet(FileSystemEntity dir, List<File> overlayFiles,
+      {@required String rootDir, @required Logger log}) async {
+    var pubResult = await pub.runFlutterPubGet(dir, rootDir: rootDir, log: log);
+    if (pubResult == null) {
+      return null;
+    }
+    //yuck
+    var exitCode = pubResult.result.exitCode;
+    if (exitCode != 0) {
+      var errorMessage = pubResult?.result?.stderr ?? 'no pubspec found';
+      log.stderr('Error: $errorMessage');
+    }
+
+    // Copy overlay files.
+    var lockFile = File(path.join(dir.path, 'pubspec.lock'));
+    if (lockFile.existsSync()) {
+      overlayFiles.add(lockFile);
+    }
+
+    return exitCode;
+  }
 }
 
 /// Source hosted on Github.
@@ -49,6 +196,12 @@ class GithubSource extends SourceHost {
         MetadataKeys.repoUrl: repoUrl,
         MetadataKeys.commitHash: commitHash,
       };
+
+  @override
+  SourceReifier<SourceHost> getReifier(Project project,
+          {String outputDirPath, String overlaysPath, Logger log}) =>
+      GithubSourceReifier(project,
+          sourceDirPath: outputDirPath, overlaysPath: overlaysPath, log: log);
 }
 
 /// A collected body of Dart source (package, application, etc) suitable for
@@ -79,6 +232,21 @@ class Project {
 
   Project(this.name) : metadata = {};
 
+  Future<void> reifySources(
+      {@required String outputDirPath,
+      @required String overlaysPath,
+      @required Logger log}) async {
+    if (host == null) {
+      log.stdout('Not reifying $name: no source host');
+      return;
+    }
+
+    //
+    var reifier = host.getReifier(this,
+        outputDirPath: outputDirPath, overlaysPath: overlaysPath, log: log);
+    await reifier.reifySources();
+  }
+
   Project.fromJson(Map<String, dynamic> json)
       : name = json[MetadataKeys.projectName],
         overlayPath = json[MetadataKeys.overlayPath],
@@ -108,4 +276,7 @@ abstract class SourceHost {
     }
     return null;
   }
+
+  SourceReifier<SourceHost> getReifier(Project project,
+      {String outputDirPath, String overlaysPath, Logger log});
 }
