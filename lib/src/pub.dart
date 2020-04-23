@@ -12,10 +12,10 @@ var _packageConfigPath = path.join('.dart_tool', 'package_config.json');
 bool _hasPubspec(FileSystemEntity f) =>
     f is Directory && File(path.join(f.path, 'pubspec.yaml')).existsSync();
 
-
 class PubGetResult {
   /// Directory where pub was run.
   Directory directory;
+
   /// Process result of running pub.
   ProcessResult result;
 
@@ -31,7 +31,8 @@ Future<PubGetResult> runFlutterPubGet(FileSystemEntity dir,
     if (!File(packageFile).existsSync() || !skipUpdate) {
       log.stdout(
           'Getting pub dependencies for "${path.relative(dir.path, from: rootDir)}"...');
-      var processResult = await Process.run('flutter', ['pub', 'get'], workingDirectory: dir.path);
+      var processResult = await Process.run('flutter', ['pub', 'get'],
+          workingDirectory: dir.path);
       return PubGetResult(dir, processResult);
     }
   }

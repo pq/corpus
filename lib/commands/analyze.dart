@@ -14,8 +14,5 @@ class AnalyzeCommand extends Command {
   String get description => 'Analyze corpus.';
 
   @override
-  Future run() async {
-
-
-  }
+  Future run() async {}
 }

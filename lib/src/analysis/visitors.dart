@@ -11,7 +11,6 @@ abstract class AnalysisOptionsVisitor {
   void visit(AnalysisOptionsFile file) {}
 }
 
-
 class OptionsVisitor extends AnalysisOptionsVisitor {
   @override
   void visit(AnalysisOptionsFile options) {
@@ -19,9 +18,7 @@ class OptionsVisitor extends AnalysisOptionsVisitor {
   }
 }
 
-
 /// A simple visitor for pubspec files.
 abstract class PubspecVisitor {
   void visit(PubspecFile file) {}
 }
-

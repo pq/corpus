@@ -13,22 +13,18 @@ import 'dart:io';
 //////////////
 
 /// A host for project source code.
-abstract class SourceHost {
-
-}
+abstract class SourceHost {}
 
 /// 1-2 quarter goals
 /// Need to come to an understanding about the mix of the corpus
 /// Want to make sure Google3 customers are amply represented
 /// Want to make sure non-Flutter apps are represented
 
-
 /// General goals
 /// Customer mix
 /// Maintenance
 ///   * what are long term maintenance issues?  How can we mitigate?
 ///   * can the tooling be self-healing?
-
 
 /// Source hosted on Github.
 class GithubSource extends SourceHost {
@@ -48,12 +44,10 @@ class Google3Source extends SourceHost {
   /// Ooof.  How do ACLs bear on this?
 }
 
-class BitBucketSource extends SourceHost {
-
-}
+class BitBucketSource extends SourceHost {}
 
 class PubDevPackageSource extends SourceHost {
-    /// zipLocation
+  /// zipLocation
 }
 
 /// A collection of projects.

@@ -18,45 +18,17 @@ import '../../src/corpus.dart';
 import '../../src/file.dart';
 import '../../src/metadata.dart';
 
-class _AstVisitor extends SimpleAstVisitor<void> {
-  final Set<LibraryElement> libraries = {};
-
-  int lineCount = 0;
-
-  @override
-  void visitCompilationUnit(CompilationUnit node) {
-    var element = node.declaredElement;
-    var library = element.library;
-    libraries.add(library);
-    lineCount += element.lineInfo.lineCount;
-  }
-
-  @override
-  void visitClassDeclaration(ClassDeclaration node) {
-    print(node.name);
-    print(node.declaredElement);
-  }
-}
-
-class _PubspecVisitor extends PubspecVisitor {
-  String sdkConstraint;
-
-  @override
-  void visit(PubspecFile file) {
-    sdkConstraint = (file.yaml['environment'] ?? {})['sdk'];
-  }
-}
-
-final _overlaysDirPath = path.join(indexDirPath, 'itsallwidgets', 'overlays');
-final _indexFilePath = path.join(indexDirPath, 'itsallwidgets', 'index.json');
 final _feedFilePath = path.join('_data', 'itsallwidgets', 'feed.json');
 
+final _indexFilePath = path.join(indexDirPath, 'itsallwidgets', 'index.json');
+
+final _overlaysDirPath = path.join(indexDirPath, 'itsallwidgets', 'overlays');
 class IndexItsAllWidgetsCommand extends Command {
   @override
-  String get name => 'itsallwidgets';
+  String get description => 'Build itsallwidgets index.';
 
   @override
-  String get description => 'Build itsallwidgets index.';
+  String get name => 'itsallwidgets';
 
   @override
   Future run() async {
@@ -82,7 +54,6 @@ class IndexItsAllWidgetsCommand extends Command {
       }
       // todo (pq): remove projects not in feed
     }
-
 
     log.stdout('Fetching projects...');
 
@@ -132,5 +103,33 @@ class IndexItsAllWidgetsCommand extends Command {
 
     log.stdout('Writing index...');
     await index.write();
+  }
+}
+class _AstVisitor extends SimpleAstVisitor<void> {
+  final Set<LibraryElement> libraries = {};
+
+  int lineCount = 0;
+
+  @override
+  void visitClassDeclaration(ClassDeclaration node) {
+    print(node.name);
+    print(node.declaredElement);
+  }
+
+  @override
+  void visitCompilationUnit(CompilationUnit node) {
+    var element = node.declaredElement;
+    var library = element.library;
+    libraries.add(library);
+    lineCount += element.lineInfo.lineCount;
+  }
+}
+
+class _PubspecVisitor extends PubspecVisitor {
+  String sdkConstraint;
+
+  @override
+  void visit(PubspecFile file) {
+    sdkConstraint = (file.yaml['environment'] ?? {})['sdk'];
   }
 }

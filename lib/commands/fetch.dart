@@ -14,8 +14,5 @@ class FetchCommand extends Command {
   String get description => 'Fetch corpus contents.';
 
   @override
-  Future run() async {
-
-
-  }
+  Future run() async {}
 }

@@ -21,62 +21,49 @@ class Corpus {
 
   final List<Project> projects = [];
 
+  bool containsProject(String name) => getProject(name) != null;
+
   Project getProject(String name) =>
       projects.firstWhere((p) => p.name == name, orElse: () => null);
-
-  bool containsProject(String name) => getProject(name) != null;
 
   List<Map<String, dynamic>> toJson() => [
         for (var project in projects) project.toJson(),
       ];
 }
 
-abstract class SourceReifier<T extends SourceHost> {
-  final String overlaysPath;
-  final String sourceDirPath;
-  final Logger log;
-  Project project;
-  SourceReifier(this.project,
-      {@required this.overlaysPath,
-      @required this.sourceDirPath,
-      @required this.log});
+/// Source hosted on Github.
+class GithubSource extends SourceHost {
+  /// Github Repo URL.
+  String repoUrl;
 
-  Future<void> reifySources();
+  /// Commit hash used to uniquely identify this repo at a specific commit.
+  String commitHash;
 
-  T get host => project.host;
-}
+  GithubSource(this.repoUrl, {this.commitHash});
 
-class IndexFile {
-  final Corpus corpus = Corpus();
-
-  final File file;
-  IndexFile(String path) : file = File(path);
-
-  bool readSync() {
-    if (file.existsSync()) {
-      var index = file.readAsStringSync();
-      for (var entry in json.decode(index)) {
-        var project = Project.fromJson(entry);
-        corpus.projects.add(project);
-      }
-      return true;
+  factory GithubSource.fromJson(Map<String, dynamic> json) {
+    var repoUrl = json[MetadataKeys.repoUrl];
+    // No need to create a host entry with no URL.
+    if (repoUrl == null) {
+      return null;
     }
-    return false;
+    var commitHash = json[MetadataKeys.commitHash];
+    return GithubSource(repoUrl, commitHash: commitHash);
   }
 
-  Future<void> write({bool prettyPrint = true}) async {
-    var jsonMap = corpus.toJson();
-    var jsonString = prettyPrint
-        ? JsonEncoder.withIndent('  ').convert(jsonMap)
-        : jsonEncode(jsonMap);
-    if (!file.existsSync()) {
-      await file.create();
-    }
+  @override
+  SourceReifier<SourceHost> getReifier(Project project,
+          {String outputDirPath, String overlaysPath, Logger log}) =>
+      GithubSourceReifier(project,
+          sourceDirPath: outputDirPath, overlaysPath: overlaysPath, log: log);
 
-    await file.writeAsString(jsonString);
-  }
+  @override
+  Map<String, dynamic> toJson() => {
+        MetadataKeys.hostKind: MetadataKeys.githubHost,
+        MetadataKeys.repoUrl: repoUrl,
+        MetadataKeys.commitHash: commitHash,
+      };
 }
-
 
 class GithubSourceReifier extends SourceReifier<GithubSource> {
   GithubSourceReifier(Project project,
@@ -170,38 +157,35 @@ class GithubSourceReifier extends SourceReifier<GithubSource> {
   }
 }
 
-/// Source hosted on Github.
-class GithubSource extends SourceHost {
-  /// Github Repo URL.
-  String repoUrl;
+class IndexFile {
+  final Corpus corpus = Corpus();
 
-  /// Commit hash used to uniquely identify this repo at a specific commit.
-  String commitHash;
+  final File file;
+  IndexFile(String path) : file = File(path);
 
-  GithubSource(this.repoUrl, {this.commitHash});
-
-  factory GithubSource.fromJson(Map<String, dynamic> json) {
-    var repoUrl = json[MetadataKeys.repoUrl];
-    // No need to create a host entry with no URL.
-    if (repoUrl == null) {
-      return null;
+  bool readSync() {
+    if (file.existsSync()) {
+      var index = file.readAsStringSync();
+      for (var entry in json.decode(index)) {
+        var project = Project.fromJson(entry);
+        corpus.projects.add(project);
+      }
+      return true;
     }
-    var commitHash = json[MetadataKeys.commitHash];
-    return GithubSource(repoUrl, commitHash: commitHash);
+    return false;
   }
 
-  @override
-  Map<String, dynamic> toJson() => {
-        MetadataKeys.hostKind: MetadataKeys.githubHost,
-        MetadataKeys.repoUrl: repoUrl,
-        MetadataKeys.commitHash: commitHash,
-      };
+  Future<void> write({bool prettyPrint = true}) async {
+    var jsonMap = corpus.toJson();
+    var jsonString = prettyPrint
+        ? JsonEncoder.withIndent('  ').convert(jsonMap)
+        : jsonEncode(jsonMap);
+    if (!file.existsSync()) {
+      file.createSync();
+    }
 
-  @override
-  SourceReifier<SourceHost> getReifier(Project project,
-          {String outputDirPath, String overlaysPath, Logger log}) =>
-      GithubSourceReifier(project,
-          sourceDirPath: outputDirPath, overlaysPath: overlaysPath, log: log);
+    await file.writeAsString(jsonString);
+  }
 }
 
 /// A collected body of Dart source (package, application, etc) suitable for
@@ -232,6 +216,12 @@ class Project {
 
   Project(this.name) : metadata = {};
 
+  Project.fromJson(Map<String, dynamic> json)
+      : name = json[MetadataKeys.projectName],
+        overlayPath = json[MetadataKeys.overlayPath],
+        host = SourceHost.fromJson(json[MetadataKeys.host]),
+        metadata = jsonDecode(json[MetadataKeys.metadata]);
+
   Future<void> reifySources(
       {@required String outputDirPath,
       @required String overlaysPath,
@@ -247,12 +237,6 @@ class Project {
     await reifier.reifySources();
   }
 
-  Project.fromJson(Map<String, dynamic> json)
-      : name = json[MetadataKeys.projectName],
-        overlayPath = json[MetadataKeys.overlayPath],
-        host = SourceHost.fromJson(json[MetadataKeys.host]),
-        metadata = jsonDecode(json[MetadataKeys.metadata]);
-
   Map<String, dynamic> toJson() => {
         MetadataKeys.projectName: name,
         MetadataKeys.overlayPath: overlayPath,
@@ -263,8 +247,6 @@ class Project {
 
 /// A host for project source code.
 abstract class SourceHost {
-  Map<String, dynamic> toJson();
-
   SourceHost();
 
   factory SourceHost.fromJson(Map<String, dynamic> json) {
@@ -279,4 +261,21 @@ abstract class SourceHost {
 
   SourceReifier<SourceHost> getReifier(Project project,
       {String outputDirPath, String overlaysPath, Logger log});
+
+  Map<String, dynamic> toJson();
+}
+
+abstract class SourceReifier<T extends SourceHost> {
+  final String overlaysPath;
+  final String sourceDirPath;
+  final Logger log;
+  Project project;
+  SourceReifier(this.project,
+      {@required this.overlaysPath,
+      @required this.sourceDirPath,
+      @required this.log});
+
+  T get host => project.host;
+
+  Future<void> reifySources();
 }

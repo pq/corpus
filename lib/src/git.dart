@@ -23,10 +23,10 @@ Future<CloneResult> clone(
     @required Logger logger}) async {
   var processResult;
   if (Directory(cloneDir).existsSync()) {
-      logger.stdout('(Repository exists, pulling to update)');
-      // todo (pq): set rebase policy?
-      processResult =
-          await Process.run('git', ['pull'], workingDirectory: cloneDir);
+    logger.stdout('(Repository exists, pulling to update)');
+    // todo (pq): set rebase policy?
+    processResult =
+        await Process.run('git', ['pull'], workingDirectory: cloneDir);
   } else {
     //logger.stdout('Cloning $repoUrl to $cloneDir');
     processResult = await Process.run(

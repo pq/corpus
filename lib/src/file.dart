@@ -55,9 +55,6 @@ YamlMap _readYamlFromString(String optionsSource) {
   }
 }
 
-
-
-
 /// Recursive copy [src] to [dest].
 Future<void> copy(FileSystemEntity src, Directory dest) async {
   if (src is File) {

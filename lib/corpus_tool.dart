@@ -7,8 +7,7 @@ import 'commands/fetch.dart';
 import 'commands/index.dart';
 
 class CorpusToolCommandRunner extends CommandRunner {
-  CorpusToolCommandRunner()
-      : super('corpus_tool', 'Flutter corpus tools.') {
+  CorpusToolCommandRunner() : super('corpus_tool', 'Flutter corpus tools.') {
     addCommand(FetchCommand());
     addCommand(IndexCommand());
   }
