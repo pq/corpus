@@ -30,7 +30,7 @@ Future<PubGetResult> runFlutterPubGet(FileSystemEntity dir,
     // todo (pq): fix update logic
     if (!File(packageFile).existsSync() || !skipUpdate) {
       log.stdout(
-          'Getting pub dependencies for "${path.relative(dir.path, from: rootDir)}"...');
+          "Getting pub dependencies for '${path.relative(dir.path, from: rootDir)}'...");
       var processResult = await Process.run('flutter', ['pub', 'get'],
           workingDirectory: dir.path);
       return PubGetResult(dir, processResult);
