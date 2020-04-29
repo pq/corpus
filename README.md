@@ -1,2 +1,2 @@
 # corpus
-Flutter/Dart code corpus experiments.
+Dart/Flutter code corpus experiments.
