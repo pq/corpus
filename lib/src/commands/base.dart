@@ -8,8 +8,7 @@ import 'package:cli_util/cli_logging.dart';
 abstract class BaseCommand extends Command {
   Logger _logger;
 
-  Logger get log =>
-      _logger ??= verbose ? Logger.verbose() : Logger.standard();
+  Logger get log => _logger ??= verbose ? Logger.verbose() : Logger.standard();
 
   bool get verbose => globalResults['verbose'];
 }

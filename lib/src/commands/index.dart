@@ -10,11 +10,11 @@ import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:path/path.dart' as path;
 
-import '../src/analysis/driver.dart';
-import '../src/analysis/visitors.dart';
-import '../src/corpus.dart';
-import '../src/file.dart';
-import '../src/metadata.dart';
+import '../analysis/driver.dart';
+import '../analysis/visitors.dart';
+import '../corpus.dart';
+import '../file.dart';
+import '../metadata.dart';
 import 'base.dart';
 
 final _feedFilePath = path.join('_data', 'itsallwidgets', 'feed.json');
