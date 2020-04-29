@@ -1,8 +1,8 @@
-name: flutter_corpus
+name: corpus
 version: 0.0.1
 
 description: >-
-  Flutter code-mining corpus experiments
+  Dart/Flutter code-mining corpus experiments
 
 environment:
   sdk: '>=2.6.0 <3.0.0'
