@@ -1,2 +1,2 @@
-# flutter_corpus
-Flutter widget corpus experiments.
+# corpus
+Flutter/Dart code corpus experiments.
