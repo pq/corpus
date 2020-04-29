@@ -5,7 +5,7 @@
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:flutter_corpus/corpus_tool.dart';
+import 'package:corpus/corpus_tool.dart';
 
 void main(List<String> args) async {
   var runner = CorpusToolCommandRunner();
