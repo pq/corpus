@@ -31,42 +31,42 @@ class Corpus {
       ];
 }
 
-/// Source hosted on Github.
-class GithubSource extends SourceHost {
-  /// Github Repo URL.
+/// Source hosted on Git.
+class GitSource extends SourceHost {
+  /// Git Repo URL.
   String repoUrl;
 
   /// Commit hash used to uniquely identify this repo at a specific commit.
   String commitHash;
 
-  GithubSource(this.repoUrl, {this.commitHash});
+  GitSource(this.repoUrl, {this.commitHash});
 
-  factory GithubSource.fromJson(Map<String, dynamic> json) {
+  factory GitSource.fromJson(Map<String, dynamic> json) {
     var repoUrl = json[MetadataKeys.repoUrl];
     // No need to create a host entry with no URL.
     if (repoUrl == null) {
       return null;
     }
     var commitHash = json[MetadataKeys.commitHash];
-    return GithubSource(repoUrl, commitHash: commitHash);
+    return GitSource(repoUrl, commitHash: commitHash);
   }
 
   @override
   SourceReifier<SourceHost> getReifier(Project project,
           {String outputDirPath, String overlaysPath, Logger log}) =>
-      GithubSourceReifier(project,
+      GitSourceReifier(project,
           sourceDirPath: outputDirPath, overlaysPath: overlaysPath, log: log);
 
   @override
   Map<String, dynamic> toJson() => {
-        MetadataKeys.hostKind: MetadataKeys.githubHost,
+        MetadataKeys.hostKind: MetadataKeys.gitHost,
         MetadataKeys.repoUrl: repoUrl,
         MetadataKeys.commitHash: commitHash,
       };
 }
 
-class GithubSourceReifier extends SourceReifier<GithubSource> {
-  GithubSourceReifier(Project project,
+class GitSourceReifier extends SourceReifier<GitSource> {
+  GitSourceReifier(Project project,
       {@required String overlaysPath,
       @required String sourceDirPath,
       @required Logger log})
@@ -251,8 +251,8 @@ abstract class SourceHost {
   factory SourceHost.fromJson(Map<String, dynamic> json) {
     if (json != null) {
       var kind = json[MetadataKeys.hostKind];
-      if (kind == MetadataKeys.githubHost) {
-        return GithubSource.fromJson(json);
+      if (kind == MetadataKeys.gitHost) {
+        return GitSource.fromJson(json);
       }
     }
     return null;

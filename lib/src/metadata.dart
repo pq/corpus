@@ -3,13 +3,14 @@
 // found in the LICENSE file.
 
 class MetadataKeys {
+  // todo (pq): consider shortening these key values to reduce the size of index.json
   static const String commitHash = 'commitHash';
-  static const String githubHost = 'gh';
+  static const String gitHost = 'git';
   static const String host = 'host';
   static const String hostKind = 'kind';
   static const String lastCommitDate = 'lastCommitDate';
   static const String libraryCount = 'libraryCount';
-  static const String lineCount = 'lineCount';
+  static const String lineCount = 'loc';
   static const String metadata = 'metadata';
   static const String overlayPath = 'overlayPath';
   static const String projectName = 'name';

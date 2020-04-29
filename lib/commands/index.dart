@@ -58,7 +58,7 @@ class IndexItsAllWidgetsCommand extends BaseCommand {
       if (!corpus.containsProject(name)) {
         var project = Project(name);
         var repo = entry['repo_url'];
-        project.host = GithubSource(repo);
+        project.host = GitSource(repo);
         corpus.projects.add(project);
       }
       // todo (pq): remove projects not in feed
@@ -67,14 +67,14 @@ class IndexItsAllWidgetsCommand extends BaseCommand {
     log.trace('Fetching projects...');
 
     //TMP
-    var limit = 2;
-    var count = 0;
+//    var limit = 30;
+//    var count = 0;
 
     for (var project in corpus.projects) {
       //TMP
-      if (++count > limit) {
-        break;
-      }
+//      if (++count > limit) {
+//        break;
+//      }
 
       if (project.host == null) {
         log.trace('Skipping ${project.name}: no source host');
@@ -89,9 +89,7 @@ class IndexItsAllWidgetsCommand extends BaseCommand {
 
       //
       // Perform analysis if necessary.
-      var analysisPerformed =
-          project.metadata[MetadataKeys.libraryCount] != null;
-      if (!analysisPerformed || true /* TMP */) {
+      if (needsAnalysis(project)) {
         log.stdout("Analyzing '${project.name}'...");
         var cloneDir = Directory(cloneDirPath);
         // todo (pq): do we need to recurse here?
@@ -115,6 +113,11 @@ class IndexItsAllWidgetsCommand extends BaseCommand {
     await index.write();
     log.stdout('Done.');
   }
+
+  //for testing
+  //bool needsAnalysis(Project project) => true;
+  bool needsAnalysis(Project project) =>
+      project.metadata[MetadataKeys.libraryCount] == null;
 }
 
 class _AstVisitor extends SimpleAstVisitor<void> {
