@@ -220,7 +220,7 @@ class Project {
       : name = json[MetadataKeys.projectName],
         overlayPath = json[MetadataKeys.overlayPath],
         host = SourceHost.fromJson(json[MetadataKeys.host]),
-        metadata = jsonDecode(json[MetadataKeys.metadata]);
+        metadata = json[MetadataKeys.metadata];
 
   Future<void> reifySources(
       {@required String outputDirPath,
@@ -240,7 +240,7 @@ class Project {
         MetadataKeys.projectName: name,
         MetadataKeys.overlayPath: overlayPath,
         MetadataKeys.host: host?.toJson(),
-        MetadataKeys.metadata: jsonEncode(metadata),
+        MetadataKeys.metadata: metadata,
       };
 }
 
