@@ -95,6 +95,21 @@ class GitSourceReifier extends SourceReifier<GitSource> {
         project.metadata[MetadataKeys.lastCommitDate] = commitDate;
         host.commitHash = lastCommit;
       }
+    } else {
+      // Checkout if needed, and set to specified commit.
+      if (!cloneDir.existsSync()) {
+        // Clone.
+        var result = await git.clone(
+            repoUrl: host.repoUrl, cloneDir: sourceDirPath, logger: log);
+        if (result.exitCode == 0) {
+          result = await git.checkout(
+              cloneDir: sourceDirPath, branch: host.commitHash, logger: log);
+        }
+
+        if (result.exitCode != 0) {
+          log.stdout('error checking out ${project.name}: ${result.msg}');
+        }
+      }
     }
 
     // If no overlayPath is cached, get pub deps and cache overlays.

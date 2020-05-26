@@ -8,15 +8,17 @@ import 'dart:io';
 import 'package:cli_util/cli_logging.dart';
 import 'package:meta/meta.dart';
 
-class CloneResult {
-  final String directory;
-  final int exitCode;
-  final String msg;
-
-  const CloneResult(this.exitCode, this.directory, {this.msg = ''});
+Future<GitResult> checkout(
+    {@required String cloneDir,
+    @required String branch,
+    @required Logger logger}) async {
+  var processResult = await Process.run('git', ['checkout', branch],
+      workingDirectory: cloneDir);
+  return GitResult(processResult?.exitCode, cloneDir,
+      msg: processResult?.stderr);
 }
 
-Future<CloneResult> clone(
+Future<GitResult> clone(
     {@required String repoUrl,
     @required String cloneDir,
     @required Logger logger}) async {
@@ -31,7 +33,7 @@ Future<CloneResult> clone(
     processResult = await Process.run(
         'git', ['clone', '--recurse-submodules', '$repoUrl.git', cloneDir]);
   }
-  return CloneResult(processResult?.exitCode, cloneDir,
+  return GitResult(processResult?.exitCode, cloneDir,
       msg: processResult?.stderr);
 }
 
@@ -46,4 +48,12 @@ Future<String> getLastCommitDate(Directory dir) async {
       'git', ['log', '-1', '--date=iso', '--pretty=format:%cd'],
       workingDirectory: dir.absolute.path);
   return LineSplitter().convert(result.stdout).first;
+}
+
+class GitResult {
+  final String directory;
+  final int exitCode;
+  final String msg;
+
+  const GitResult(this.exitCode, this.directory, {this.msg = ''});
 }
