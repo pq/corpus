@@ -22,14 +22,14 @@ class FetchCommand extends BaseCommand {
   @override
   String get description => 'Fetch corpus contents.';
 
-  int get fetchLimit => int.parse(argResults['limit']);
+  int get fetchLimit => int.parse(argResults!['limit']);
 
   @override
   String get name => 'fetch';
 
   @override
   Future run() async {
-    var args = argResults.rest;
+    var args = argResults!.rest;
     if (args.isEmpty) {
       // todo (pq): print message
       return null;
@@ -57,7 +57,8 @@ class FetchCommand extends BaseCommand {
       var cloneDirPath = path.join(cacheDirPath, project.name);
       await project.reifySources(
           outputDirPath: cloneDirPath, overlaysPath: overlaysDirPath, log: log);
-      await pub.runFlutterPubGet(Directory(cloneDirPath), rootDir: cacheDirPath, log: log);
+      await pub.runFlutterPubGet(Directory(cloneDirPath),
+          rootDir: cacheDirPath, log: log);
     }
 
     log.stdout('Done');

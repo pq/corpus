@@ -7,9 +7,6 @@ import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/file_system/file_system.dart';
 import 'package:analyzer/file_system/physical_file_system.dart';
-import 'package:analyzer/src/generated/engine.dart' // ignore: implementation_imports
-    show
-        AnalysisEngine;
 import 'package:cli_util/cli_logging.dart';
 import 'package:path/path.dart' as path;
 
@@ -23,8 +20,7 @@ import 'visitors.dart';
 ///
 /// Awaiting this approximates waiting until all asynchronous work (other than
 /// work that's waiting for external resources) completes.
-Future _pumpEventQueue({int times}) {
-  times ??= 20;
+Future _pumpEventQueue({int times = 20}) {
   if (times == 0) return Future.value();
   // Use [new Future] future to allow microtask events to finish. The [new
   // Future.value] constructor uses scheduleMicrotask itself and would therefore
@@ -36,15 +32,15 @@ Future _pumpEventQueue({int times}) {
 class Driver {
   final List<String> sources;
   final Logger log;
-  List<String> _excludedPaths;
+  List<String>? _excludedPaths;
 
   bool resolveUnits = true;
 
   /// Hook to contribute a custom AST visitor.
-  AstVisitor visitor;
+  AstVisitor? visitor;
 
   /// Hook to contribute custom pubspec analysis.
-  PubspecVisitor pubspecVisitor;
+  PubspecVisitor? pubspecVisitor;
 
   Driver(this.sources, this.log);
 
@@ -87,9 +83,12 @@ class Driver {
         resourceProvider: resourceProvider,
       );
 
+      var visitor = this.visitor;
+      var pubspecVisitor = this.pubspecVisitor;
+
       for (var context in collection.contexts) {
         for (var filePath in context.contextRoot.analyzedFiles()) {
-          if (AnalysisEngine.isDartFileName(filePath)) {
+          if (isDartFileName(filePath)) {
             try {
               var result = resolveUnits
                   ? await context.currentSession.getResolvedUnit(filePath)
@@ -108,7 +107,7 @@ class Driver {
             }
           } else {
             if (pubspecVisitor != null) {
-              if (path.basename(filePath) == AnalysisEngine.PUBSPEC_YAML_FILE) {
+              if (path.basename(filePath) == 'pubspec.yaml') {
                 pubspecVisitor.visit(PubspecFile(filePath));
               }
             }
@@ -118,4 +117,7 @@ class Driver {
       }
     }
   }
+
+  /// Returns `true` if this [fileName] is a Dart file.
+  static bool isDartFileName(String fileName) => fileName.endsWith('.dart');
 }

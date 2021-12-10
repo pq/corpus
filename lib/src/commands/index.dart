@@ -134,14 +134,16 @@ class _AstVisitor extends SimpleAstVisitor<void> {
   @override
   void visitCompilationUnit(CompilationUnit node) {
     var element = node.declaredElement;
-    var library = element.library;
-    libraries.add(library);
-    lineCount += element.lineInfo.lineCount;
+    if (element != null) {
+      var library = element.library;
+      libraries.add(library);
+      lineCount += element.lineInfo?.lineCount ?? 0;
+    }
   }
 }
 
 class _PubspecVisitor extends PubspecVisitor {
-  String sdkConstraint;
+  late String sdkConstraint;
 
   @override
   void visit(PubspecFile file) {

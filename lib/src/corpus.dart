@@ -7,7 +7,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cli_util/cli_logging.dart';
-import 'package:meta/meta.dart';
+import 'package:collection/collection.dart';
 import 'package:path/path.dart' as path;
 
 import '../src/git.dart' as git;
@@ -23,8 +23,8 @@ class Corpus {
 
   bool containsProject(String name) => getProject(name) != null;
 
-  Project getProject(String name) =>
-      projects.firstWhere((p) => p.name == name, orElse: () => null);
+  Project? getProject(String name) =>
+      projects.firstWhereOrNull((p) => p.name == name);
 
   List<Map<String, dynamic>> toJson() => [
         for (var project in projects) project.toJson(),
@@ -34,14 +34,14 @@ class Corpus {
 /// Source hosted on Git.
 class GitSource extends SourceHost {
   /// Git Repo URL.
-  String repoUrl;
+  String? repoUrl;
 
   /// Commit hash used to uniquely identify this repo at a specific commit.
-  String commitHash;
+  String? commitHash;
 
   GitSource(this.repoUrl, {this.commitHash});
 
-  factory GitSource.fromJson(Map<String, dynamic> json) {
+  static GitSource? fromJson(Map<String, dynamic> json) {
     var repoUrl = json[MetadataKeys.repoUrl];
     // No need to create a host entry with no URL.
     if (repoUrl == null) {
@@ -53,7 +53,9 @@ class GitSource extends SourceHost {
 
   @override
   SourceReifier<SourceHost> getReifier(Project project,
-          {String outputDirPath, String overlaysPath, Logger log}) =>
+          {required String outputDirPath,
+          required String overlaysPath,
+          required Logger log}) =>
       GitSourceReifier(project,
           sourceDirPath: outputDirPath, overlaysPath: overlaysPath, log: log);
 
@@ -67,9 +69,9 @@ class GitSource extends SourceHost {
 
 class GitSourceReifier extends SourceReifier<GitSource> {
   GitSourceReifier(Project project,
-      {@required String overlaysPath,
-      @required String sourceDirPath,
-      @required Logger log})
+      {required String overlaysPath,
+      required String sourceDirPath,
+      required Logger log})
       : super(project,
             sourceDirPath: sourceDirPath, overlaysPath: overlaysPath, log: log);
 
@@ -103,7 +105,9 @@ class GitSourceReifier extends SourceReifier<GitSource> {
             repoUrl: host.repoUrl, cloneDir: sourceDirPath, logger: log);
         if (result.exitCode == 0) {
           result = await git.checkout(
-              cloneDir: sourceDirPath, branch: host.commitHash, logger: log);
+              cloneDir: sourceDirPath,
+              branch: host.commitHash ?? '',
+              logger: log);
         }
 
         if (result.exitCode != 0) {
@@ -122,11 +126,13 @@ class GitSourceReifier extends SourceReifier<GitSource> {
       // todo (pq): this won't work w/ mono_repos: FIX that.
       if (pubResult == 0) {
         for (var dir in cloneDir.listSync(recursive: true)) {
-          var pubResult = await _runPubGet(dir, overlayFiles,
-              rootDir: cacheDirPath, log: log);
-          if (pubResult != null && pubResult != 0) {
-            // Don't set a success flag.
-            continue;
+          if (dir is Directory) {
+            var pubResult = await _runPubGet(dir, overlayFiles,
+                rootDir: cacheDirPath, log: log);
+            if (pubResult != null && pubResult != 0) {
+              // Don't set a success flag.
+              continue;
+            }
           }
         }
 
@@ -149,8 +155,8 @@ class GitSourceReifier extends SourceReifier<GitSource> {
     }
   }
 
-  Future<int> _runPubGet(FileSystemEntity dir, List<File> overlayFiles,
-      {@required String rootDir, @required Logger log}) async {
+  Future<int?> _runPubGet(Directory dir, List<File> overlayFiles,
+      {required String rootDir, required Logger log}) async {
     var pubResult = await pub.runFlutterPubGet(dir, rootDir: rootDir, log: log);
     if (pubResult == null) {
       return null;
@@ -158,7 +164,7 @@ class GitSourceReifier extends SourceReifier<GitSource> {
     //yuck
     var exitCode = pubResult.result.exitCode;
     if (exitCode != 0) {
-      var errorMessage = pubResult?.result?.stderr ?? 'no pubspec found';
+      var errorMessage = pubResult.result.stderr ?? 'no pubspec found';
       log.stderr('Error: $errorMessage');
     }
 
@@ -213,7 +219,7 @@ class Project {
   /// they've been reified.  (Overlays might contain, for example,
   /// `pubspec.lock`, `package_config.json` files,  or other artifacts used to
   /// pin project dependencies.)
-  String overlayPath;
+  String? overlayPath;
 
   /// Data on which queries can be built.
   /// For example:
@@ -227,7 +233,7 @@ class Project {
   final Map<String, Object> metadata;
 
   /// The project's source [host].
-  SourceHost host;
+  SourceHost? host;
 
   Project(this.name) : metadata = {};
 
@@ -238,9 +244,10 @@ class Project {
         metadata = json[MetadataKeys.metadata];
 
   Future<void> reifySources(
-      {@required String outputDirPath,
-      @required String overlaysPath,
-      @required Logger log}) async {
+      {required String outputDirPath,
+      required String overlaysPath,
+      required Logger log}) async {
+    var host = this.host;
     if (host == null) {
       log.trace('Not reifying $name: no source host');
       return;
@@ -263,7 +270,7 @@ class Project {
 abstract class SourceHost {
   SourceHost();
 
-  factory SourceHost.fromJson(Map<String, dynamic> json) {
+  static SourceHost? fromJson(Map<String, dynamic>? json) {
     if (json != null) {
       var kind = json[MetadataKeys.hostKind];
       if (kind == MetadataKeys.gitHost) {
@@ -274,7 +281,9 @@ abstract class SourceHost {
   }
 
   SourceReifier<SourceHost> getReifier(Project project,
-      {String outputDirPath, String overlaysPath, Logger log});
+      {required String outputDirPath,
+      required String overlaysPath,
+      required Logger log});
 
   Map<String, dynamic> toJson();
 }
@@ -285,11 +294,12 @@ abstract class SourceReifier<T extends SourceHost> {
   final Logger log;
   Project project;
   SourceReifier(this.project,
-      {@required this.overlaysPath,
-      @required this.sourceDirPath,
-      @required this.log});
+      {required this.overlaysPath,
+      required this.sourceDirPath,
+      required this.log});
 
-  T get host => project.host;
+  // todo(pq): fix this cast
+  T get host => project.host as T;
 
   Future<void> reifySources();
 }
