@@ -1,18 +1,20 @@
 name: corpus
-version: 0.0.1
+version: 0.1.0
 
 description: >-
   Dart/Flutter code-mining corpus experiments
 
 environment:
-  sdk: '>=2.6.0 <3.0.0'
+  sdk: '>=2.12.0-0 <3.0.0'
 
 dependencies:
-  analyzer: ^0.39.0
-  args: ^1.6.0
-  cli_util: ^0.1.3+2
+  analyzer: ^2.8.0
+  args: ^2.0.0
+  cli_util: ^0.3.0
+  collection: ^1.10.0
   meta: ^1.0.0
   path: ^1.2.0
+  yaml: ^3.1.0
 
 dev_dependencies:
-  pedantic: ^1.9.0
+  lints: ^1.0.0

@@ -13,9 +13,9 @@ const indexDirPath = '_index';
 class AnalysisOptionsFile {
   final File file;
 
-  String _contents;
+  String? _contents;
 
-  YamlMap _yaml;
+  YamlMap? _yaml;
   AnalysisOptionsFile(String path) : file = File(path);
 
   String get contents => _contents ??= file.readAsStringSync();
@@ -27,9 +27,9 @@ class AnalysisOptionsFile {
 class PubspecFile {
   final File file;
 
-  String _contents;
+  String? _contents;
 
-  YamlMap _yaml;
+  YamlMap? _yaml;
   PubspecFile(String path) : file = File(path);
 
   String get contents => _contents ??= file.readAsStringSync();
@@ -38,7 +38,7 @@ class PubspecFile {
   YamlMap get yaml => _yaml ??= _readYamlFromString(contents);
 }
 
-YamlMap _readYamlFromString(String optionsSource) {
+YamlMap _readYamlFromString(String? optionsSource) {
   if (optionsSource == null) {
     return YamlMap();
   }
@@ -59,12 +59,12 @@ YamlMap _readYamlFromString(String optionsSource) {
 Future<void> copy(FileSystemEntity src, Directory dest) async {
   if (src is File) {
     await copyFile(src, dest);
-  } else {
+  } else if (src is Directory) {
     await _copyDir(src, dest);
   }
 }
 
-Future<void> copyFile(File src, Directory dest, {String relativePath}) async {
+Future<void> copyFile(File src, Directory dest, {String? relativePath}) async {
   var filePath = path.relative(src.path, from: relativePath);
   var file = await File(path.join(dest.path, filePath)).create(recursive: true);
   await src.copy(file.path);

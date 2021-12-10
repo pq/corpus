@@ -4,7 +4,6 @@
 import 'dart:io';
 
 import 'package:cli_util/cli_logging.dart';
-import 'package:meta/meta.dart';
 import 'package:path/path.dart' as path;
 
 var _packageConfigPath = path.join('.dart_tool', 'package_config.json');
@@ -22,8 +21,8 @@ class PubGetResult {
   PubGetResult(this.directory, this.result);
 }
 
-Future<PubGetResult> runFlutterPubGet(FileSystemEntity dir,
-    {bool skipUpdate = false, @required String rootDir, Logger log}) async {
+Future<PubGetResult?> runFlutterPubGet(Directory dir,
+    {bool skipUpdate = false, required String rootDir, Logger? log}) async {
   log ??= Logger.standard();
   if (_hasPubspec(dir)) {
     var packageFile = path.join(dir.path, _packageConfigPath);

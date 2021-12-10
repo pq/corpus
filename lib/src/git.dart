@@ -6,23 +6,21 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cli_util/cli_logging.dart';
-import 'package:meta/meta.dart';
 
 Future<GitResult> checkout(
-    {@required String cloneDir,
-    @required String branch,
-    @required Logger logger}) async {
+    {required String cloneDir,
+    required String branch,
+    required Logger logger}) async {
   var processResult = await Process.run('git', ['checkout', branch],
       workingDirectory: cloneDir);
-  return GitResult(processResult?.exitCode, cloneDir,
-      msg: processResult?.stderr);
+  return GitResult(processResult.exitCode, cloneDir, msg: processResult.stderr);
 }
 
 Future<GitResult> clone(
-    {@required String repoUrl,
-    @required String cloneDir,
-    @required Logger logger}) async {
-  var processResult;
+    {required String? repoUrl,
+    required String cloneDir,
+    required Logger logger}) async {
+  ProcessResult processResult;
   if (Directory(cloneDir).existsSync()) {
     logger.stdout('(Repository exists, pulling to update)');
     // todo (pq): set rebase policy?
@@ -33,8 +31,8 @@ Future<GitResult> clone(
     processResult = await Process.run(
         'git', ['clone', '--recurse-submodules', '$repoUrl.git', cloneDir]);
   }
-  return GitResult(processResult?.exitCode, cloneDir,
-      msg: processResult?.stderr);
+  return GitResult(processResult.exitCode, cloneDir,
+      msg: processResult.stderr);
 }
 
 Future<String> getLastCommit(Directory dir) async {
