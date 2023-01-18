@@ -137,7 +137,7 @@ class _AstVisitor extends SimpleAstVisitor<void> {
     if (element != null) {
       var library = element.library;
       libraries.add(library);
-      lineCount += element.lineInfo?.lineCount ?? 0;
+      lineCount += element.lineInfo.lineCount;
     }
   }
 }
