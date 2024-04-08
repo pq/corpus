@@ -5,10 +5,10 @@ description: >-
   Dart/Flutter code-mining corpus experiments
 
 environment:
-  sdk: '>=2.17.0 <3.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
-  analyzer: ^5.4.0
+  analyzer: ^6.0.0
   args: ^2.0.0
   cli_util: ^0.4.0
   collection: ^1.10.0
@@ -17,4 +17,4 @@ dependencies:
   yaml: ^3.1.0
 
 dev_dependencies:
-  lints: ^2.0.0
+  lints: ^3.0.0
